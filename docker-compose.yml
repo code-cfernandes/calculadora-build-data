@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: ./packages/php
+      dockerfile: Dockerfile
+    # Porta exposta opcionalmente para testes diretos na API (ex: curl, Postman)
+    ports:
+      - "8080:80"
+    networks:
+      - app
+
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - app
+
+networks:
+  app:
+    driver: bridge

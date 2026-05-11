@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Vendas — Build Data</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.10);
+      padding: 2rem 2.5rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: .25rem;
+    }
+
+    .subtitle {
+      font-size: .875rem;
+      color: #666;
+      margin-bottom: 1.75rem;
+    }
+
+    label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: .4rem;
+    }
+
+    .field { margin-bottom: 1.25rem; }
+
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: .55rem .75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .9rem;
+      color: #111;
+      background: #fafafa;
+      transition: border-color .15s;
+    }
+
+    input[type="file"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+    }
+
+    .hint {
+      font-size: .78rem;
+      color: #888;
+      margin-top: .3rem;
+    }
+
+    button {
+      width: 100%;
+      padding: .65rem 1rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+
+    button:hover:not(:disabled) { background: #1d4ed8; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    #status {
+      margin-top: 1.25rem;
+      font-size: .875rem;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      display: none;
+    }
+
+    #status.info    { background: #eff6ff; color: #1d4ed8; display: block; }
+    #status.success { background: #f0fdf4; color: #15803d; display: block; }
+    #status.error   { background: #fef2f2; color: #b91c1c; display: block; }
+
+    .stats {
+      margin-top: .6rem;
+      font-size: .8rem;
+      opacity: .85;
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin-top: .75rem;
+      padding: .45rem .9rem;
+      background: #15803d;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: .85rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Build Data</h1>
+  <p class="subtitle">Converte planilha Excel em <code>data.duty</code> para a Calculadora de Vendas.</p>
+
+  <form id="form" novalidate>
+    <div class="field">
+      <label for="file">Planilha Excel</label>
+      <input type="file" id="file" name="file" accept=".xlsx,.xls,.ods,.csv" required />
+      <p class="hint">Formatos suportados: .xlsx, .xls, .ods, .csv</p>
+    </div>
+
+    <div class="field">
+      <label for="sheet">Nome da aba <span style="font-weight:400;color:#888">(opcional)</span></label>
+      <input type="text" id="sheet" name="sheet" placeholder="Usa a aba ativa por padrão" />
+    </div>
+
+    <button type="submit" id="btn">Gerar data.duty</button>
+  </form>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  const form   = document.getElementById('form');
+  const btn    = document.getElementById('btn');
+  const status = document.getElementById('status');
+
+  function setStatus(type, html) {
+    status.className = type;
+    status.innerHTML = html;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('file');
+    if (!fileInput.files.length) {
+      setStatus('error', 'Selecione um arquivo antes de continuar.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    const sheet = document.getElementById('sheet').value.trim();
+    if (sheet) formData.append('sheet', sheet);
+
+    btn.disabled = true;
+    setStatus('info', 'Processando planilha…');
+
+    try {
+      const res = await fetch('/api/build', { method: 'POST', body: formData });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setStatus('error', json.error ?? 'Erro desconhecido.');
+        return;
+      }
+
+      // Cria o arquivo .duty e aciona o download
+      const blob = new Blob([json.duty], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'data.duty';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      const { marcas, produtos, pulados } = json.stats;
+      setStatus('success',
+        `<strong>data.duty gerado com sucesso!</strong>` +
+        `<div class="stats">` +
+        `Marcas: <strong>${marcas}</strong> &nbsp;|&nbsp; ` +
+        `Produtos: <strong>${produtos}</strong>` +
+        (pulados ? ` &nbsp;|&nbsp; Linhas ignoradas: <strong>${pulados}</strong>` : '') +
+        `</div>` +
+        `<a class="download-btn" href="${url}" download="data.duty">Baixar novamente</a>`
+      );
+    } catch (err) {
+      setStatus('error', 'Falha na comunicação com a API: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

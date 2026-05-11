@@ -1,0 +1,26 @@
+# PHP
+vendor/
+packages/php/vendor/
+
+# Node
+node_modules/
+pnpm-lock.yaml
+
+# Arquivos gerados pelo build
+*.duty
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
