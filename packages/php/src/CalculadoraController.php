@@ -142,8 +142,6 @@ class CalculadoraController
 
         return $response->json([
             'total'     => (float) round($total, 2, PHP_ROUND_HALF_DOWN),
-            '_total_raw' => $total,
-            '_itens'    => $debug,
             'unidades'  => $units,
             'count'     => $count,
         ]);
