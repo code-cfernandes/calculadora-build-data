@@ -62,7 +62,13 @@ class BuildDataController
          *   [2] => PRODUTO PRICING
          *   [3] => PRECO VAREJO
          */
-        $rows    = $sheet->toArray(null, false, false, false);
+        $rows = $sheet->toArray(null, false, false, false);
+
+        // Libera a memória da planilha imediatamente — o arquivo em $_FILES['tmp_name']
+        // é removido pelo PHP ao fim da requisição (não precisamos de unlink manual).
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet, $sheet);
+
         $marcasMap = [];
         $pulados   = 0;
 
@@ -121,6 +127,36 @@ class BuildDataController
         $totalProdutos = (int) array_sum(
             array_map(static fn(array $m) => count($m['produtos']), $data['marcas'])
         );
+
+        // Persiste no banco (truncate + re-insert dentro de uma transação)
+        try {
+            $pdo = Database::connect();
+            $pdo->beginTransaction();
+
+            // TRUNCATE … CASCADE limpa produtos (FK) e marcas, e reseta as sequences
+            $pdo->exec('TRUNCATE marcas CASCADE');
+
+            $stmtMarca   = $pdo->prepare('INSERT INTO marcas (nome) VALUES (?) RETURNING id');
+            $stmtProduto = $pdo->prepare('INSERT INTO produtos (marca_id, nome, preco) VALUES (?, ?, ?)');
+
+            foreach ($data['marcas'] as $marca) {
+                $stmtMarca->execute([$marca['nome']]);
+                $marcaId = (int) $stmtMarca->fetchColumn();
+
+                foreach ($marca['produtos'] as $produto) {
+                    $stmtProduto->execute([$marcaId, $produto['nome'], $produto['preco']]);
+                }
+            }
+
+            $pdo->commit();
+        } catch (\Exception $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            return $response->status(500)->json([
+                'error' => 'Erro ao salvar no banco de dados: ' . $e->getMessage(),
+            ]);
+        }
 
         return $response->json([
             'duty'  => $duty,

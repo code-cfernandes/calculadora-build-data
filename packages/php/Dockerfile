@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libfreetype6-dev \
         libxml2-dev \
         libicu-dev \
+        libpq-dev \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" zip gd intl \
+    && docker-php-ext-install -j"$(nproc)" zip gd intl pdo_pgsql \
     && rm -rf /var/lib/apt/lists/*
 
 # Habilita mod_rewrite para o .htaccess funcionar
