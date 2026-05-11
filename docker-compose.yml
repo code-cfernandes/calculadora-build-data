@@ -3,9 +3,8 @@ services:
     build:
       context: ./packages/php
       dockerfile: Dockerfile
-    # Porta exposta opcionalmente para testes diretos na API (ex: curl, Postman)
     ports:
-      - "8080:80"
+      - "${API_PORT:-8080}:80"
     networks:
       - app
 
@@ -14,7 +13,7 @@ services:
       context: ./packages/frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - api
     networks:

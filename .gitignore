@@ -6,6 +6,9 @@ packages/php/vendor/
 node_modules/
 pnpm-lock.yaml
 
+# Variáveis de ambiente locais
+.env
+
 # Arquivos gerados pelo build
 *.duty
 
