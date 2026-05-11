@@ -1,6 +1,9 @@
 FROM nginx:1.27-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html /usr/share/nginx/html/index.html
+# O entrypoint oficial do nginx processa *.conf.template em /etc/nginx/templates/
+# substituindo variáveis de ambiente com envsubst antes de iniciar.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY index.html          /usr/share/nginx/html/index.html
 
-EXPOSE 80
+ENV NGINX_PORT=80
+EXPOSE ${NGINX_PORT}
