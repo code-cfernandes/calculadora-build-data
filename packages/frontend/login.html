@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Build Data</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.10);
+      padding: 2rem 2.5rem;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: .25rem;
+    }
+
+    .subtitle {
+      font-size: .85rem;
+      color: #666;
+      margin-bottom: 1.75rem;
+    }
+
+    label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: .4rem;
+    }
+
+    .field { margin-bottom: 1.25rem; }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: .55rem .75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .9rem;
+      color: #111;
+      background: #fafafa;
+      transition: border-color .15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: .65rem 1rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+
+    button:hover:not(:disabled) { background: #1d4ed8; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .error {
+      font-size: .82rem;
+      color: #b91c1c;
+      background: #fef2f2;
+      border-radius: 6px;
+      padding: .55rem .75rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Build Data</h1>
+  <p class="subtitle">Acesso restrito — informe suas credenciais.</p>
+
+  <div id="error" class="error"></div>
+
+  <div class="field">
+    <label for="user">Usuário</label>
+    <input type="text" id="user" placeholder="admin" autocomplete="username" />
+  </div>
+
+  <div class="field">
+    <label for="pass">Senha</label>
+    <input type="password" id="pass" placeholder="••••••••" autocomplete="current-password" />
+  </div>
+
+  <button id="btn">Entrar</button>
+</div>
+
+<script>
+  // Se já tiver sessão ativa, vai direto para a tela principal
+  if (sessionStorage.getItem('admin_token')) {
+    location.replace('/');
+  }
+
+  const btn   = document.getElementById('btn');
+  const errEl = document.getElementById('error');
+
+  function showError(msg) {
+    errEl.textContent   = msg;
+    errEl.style.display = '';
+  }
+
+  async function login() {
+    const user = document.getElementById('user').value.trim();
+    const pass = document.getElementById('pass').value;
+
+    if (!user || !pass) {
+      showError('Preencha usuário e senha.');
+      return;
+    }
+
+    btn.disabled    = true;
+    errEl.style.display = 'none';
+
+    try {
+      const res  = await fetch('/api/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ user, password: pass }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        showError(json.error ?? 'Erro desconhecido.');
+        return;
+      }
+
+      sessionStorage.setItem('admin_token', json.token);
+      location.replace('/');
+    } catch (err) {
+      showError('Falha de conexão: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  btn.addEventListener('click', login);
+
+  document.getElementById('pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+</body>
+</html>

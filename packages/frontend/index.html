@@ -12,9 +12,10 @@
       background: #f0f2f5;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 1rem;
+      padding: 2rem 1rem;
+      gap: 1.5rem;
     }
 
     .card {
@@ -28,6 +29,13 @@
 
     h1 {
       font-size: 1.25rem;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: .25rem;
+    }
+
+    h2 {
+      font-size: 1.1rem;
       font-weight: 600;
       color: #111;
       margin-bottom: .25rem;
@@ -50,7 +58,8 @@
     .field { margin-bottom: 1.25rem; }
 
     input[type="file"],
-    input[type="text"] {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
       padding: .55rem .75rem;
       border: 1px solid #d1d5db;
@@ -62,7 +71,8 @@
     }
 
     input[type="file"]:focus,
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    input[type="password"]:focus {
       outline: none;
       border-color: #2563eb;
       background: #fff;
@@ -74,7 +84,7 @@
       margin-top: .3rem;
     }
 
-    button {
+    button[type="submit"] {
       width: 100%;
       padding: .65rem 1rem;
       background: #2563eb;
@@ -87,8 +97,8 @@
       transition: background .15s, opacity .15s;
     }
 
-    button:hover:not(:disabled) { background: #1d4ed8; }
-    button:disabled { opacity: .55; cursor: not-allowed; }
+    button[type="submit"]:hover:not(:disabled) { background: #1d4ed8; }
+    button[type="submit"]:disabled { opacity: .55; cursor: not-allowed; }
 
     #status {
       margin-top: 1.25rem;
@@ -119,9 +129,199 @@
       font-size: .85rem;
       font-weight: 600;
     }
+
+    /* Toggle de download */
+    .toggle-field {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      cursor: pointer;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 0;
+      user-select: none;
+    }
+
+    .toggle-label input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 2.25rem;
+      height: 1.25rem;
+      background: #d1d5db;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background .2s;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .toggle-label input[type="checkbox"]::after {
+      content: '';
+      position: absolute;
+      top: .2rem;
+      left: .2rem;
+      width: .85rem;
+      height: .85rem;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+
+    .toggle-label input[type="checkbox"]:checked {
+      background: #2563eb;
+    }
+
+    .toggle-label input[type="checkbox"]:checked::after {
+      transform: translateX(1rem);
+    }
+
+    /* Visualizador do banco */
+    .db-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      gap: .75rem;
+    }
+
+    .db-count {
+      font-size: .78rem;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: .25rem .6rem;
+      border-radius: 99px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: .2rem;
+    }
+
+    .db-filter { margin-bottom: 1rem; }
+
+    .db-empty {
+      text-align: center;
+      color: #888;
+      font-size: .875rem;
+      padding: 1.5rem 0;
+    }
+
+    .db-loading {
+      text-align: center;
+      color: #94a3b8;
+      font-size: .875rem;
+      padding: 1rem 0;
+    }
+
+    .brand-group {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: .5rem;
+      overflow: hidden;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem .85rem;
+      background: #f8fafc;
+      cursor: pointer;
+      user-select: none;
+      font-size: .875rem;
+      font-weight: 600;
+      color: #1e293b;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background .12s;
+    }
+
+    .brand-header:hover { background: #f1f5f9; }
+
+    .brand-count {
+      font-size: .75rem;
+      color: #64748b;
+      font-weight: 400;
+    }
+
+    .brand-products {
+      list-style: none;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .brand-products.hidden { display: none; }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .45rem .85rem;
+      font-size: .8rem;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .product-item:last-child { border-bottom: none; }
+
+    .product-name { flex: 1; min-width: 0; }
+
+    .product-name mark {
+      background: #fef9c3;
+      border-radius: 2px;
+      padding: 0 1px;
+      color: inherit;
+    }
+
+    .product-price {
+      font-weight: 500;
+      color: #15803d;
+      margin-left: .75rem;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Cabeçalho da página */
+    .page-header {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .page-title {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .logout-btn {
+      background: none;
+      border: none;
+      font-size: .8rem;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .logout-btn:hover { color: #64748b; }
   </style>
 </head>
 <body>
+
+<div class="page-header">
+  <span class="page-title">Build Data — Admin</span>
+  <button class="logout-btn" id="logoutBtn">Sair</button>
+</div>
+
 <div class="card">
   <h1>Build Data</h1>
   <p class="subtitle">Converte planilha Excel em <code>data.duty</code> para a Calculadora de Vendas.</p>
@@ -138,13 +338,55 @@
       <input type="text" id="sheet" name="sheet" placeholder="Usa a aba ativa por padrão" />
     </div>
 
+    <div class="toggle-field">
+      <label class="toggle-label" for="downloadToggle">
+        <input type="checkbox" id="downloadToggle" checked />
+        Baixar <code>data.duty</code> automaticamente
+      </label>
+    </div>
+
     <button type="submit" id="btn">Gerar data.duty</button>
   </form>
 
   <div id="status"></div>
 </div>
 
+<div class="card">
+  <div class="db-header">
+    <div>
+      <h2>Produtos no banco</h2>
+      <p class="subtitle" style="margin-bottom:0">Verificação dos dados carregados no banco.</p>
+    </div>
+    <span id="dbCount" class="db-count" style="display:none"></span>
+  </div>
+
+  <div class="db-filter field">
+    <label for="dbFilter">Filtrar por nome</label>
+    <input type="text" id="dbFilter" placeholder="Marca ou produto…" />
+  </div>
+
+  <div id="dbContent" class="db-loading">Carregando…</div>
+</div>
+
 <script>
+  const TOKEN_KEY = 'admin_token';
+
+  function getToken() {
+    return sessionStorage.getItem(TOKEN_KEY) ?? '';
+  }
+
+  function logout() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    location.replace('/login');
+  }
+
+  // Sem sessão ativa → vai para login
+  if (!getToken()) location.replace('/login');
+
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+
+  /* ── Upload form ── */
+
   const form   = document.getElementById('form');
   const btn    = document.getElementById('btn');
   const status = document.getElementById('status');
@@ -173,7 +415,14 @@
     setStatus('info', 'Processando planilha…');
 
     try {
-      const res = await fetch('/api/build', { method: 'POST', body: formData });
+      const res = await fetch('/api/build', {
+        method:  'POST',
+        headers: { 'Authorization': getToken() },
+        body:    formData,
+      });
+
+      if (res.status === 401) { logout(); return; }
+
       const json = await res.json();
 
       if (!res.ok) {
@@ -181,14 +430,16 @@
         return;
       }
 
-      // Cria o arquivo .duty e aciona o download
-      const blob = new Blob([json.duty], { type: 'text/plain' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = 'data.duty';
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      const blob    = new Blob([json.duty], { type: 'text/plain' });
+      const blobUrl = URL.createObjectURL(blob);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+
+      if (document.getElementById('downloadToggle').checked) {
+        const a    = document.createElement('a');
+        a.href     = blobUrl;
+        a.download = 'data.duty';
+        a.click();
+      }
 
       const { marcas, produtos, pulados } = json.stats;
       setStatus('success',
@@ -198,14 +449,127 @@
         `Produtos: <strong>${produtos}</strong>` +
         (pulados ? ` &nbsp;|&nbsp; Linhas ignoradas: <strong>${pulados}</strong>` : '') +
         `</div>` +
-        `<a class="download-btn" href="${url}" download="data.duty">Baixar novamente</a>`
+        `<a class="download-btn" href="${blobUrl}" download="data.duty">Baixar data.duty</a>`
       );
+
+      loadDbData();
     } catch (err) {
       setStatus('error', 'Falha na comunicação com a API: ' + err.message);
     } finally {
       btn.disabled = false;
     }
   });
+
+  /* ── Visualizador de produtos (admin) ── */
+
+  let dbData = [];
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function highlight(text, q) {
+    if (!q) return escHtml(text);
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return escHtml(text);
+    return (
+      escHtml(text.slice(0, idx)) +
+      '<mark>' + escHtml(text.slice(idx, idx + q.length)) + '</mark>' +
+      escHtml(text.slice(idx + q.length))
+    );
+  }
+
+  function fmtPrice(n) {
+    return 'R$\u00a0' + Number(n).toFixed(2).replace('.', ',');
+  }
+
+  function renderDb(q) {
+    const content = document.getElementById('dbContent');
+    const countEl = document.getElementById('dbCount');
+
+    if (!dbData.length) {
+      countEl.style.display = 'none';
+      content.className     = 'db-empty';
+      content.textContent   = 'Nenhum dado encontrado no banco de dados.';
+      return;
+    }
+
+    const ql = q ? q.toLowerCase() : '';
+
+    const filtered = dbData
+      .map(marca => ({
+        ...marca,
+        produtos: marca.produtos.filter(p =>
+          !ql ||
+          p.nome.toLowerCase().includes(ql) ||
+          marca.nome.toLowerCase().includes(ql)
+        )
+      }))
+      .filter(m => m.produtos.length > 0);
+
+    const total = filtered.reduce((s, m) => s + m.produtos.length, 0);
+    countEl.style.display = 'inline';
+    countEl.textContent   = total + (total === 1 ? ' produto' : ' produtos');
+
+    if (!filtered.length) {
+      content.className   = 'db-empty';
+      content.textContent = `Nenhum resultado para "${q}".`;
+      return;
+    }
+
+    content.className = '';
+    content.innerHTML = filtered.map(marca => {
+      const items = marca.produtos.map(p =>
+        `<li class="product-item">` +
+        `<span class="product-name">${highlight(p.nome, q)}</span>` +
+        `<span class="product-price">${fmtPrice(p.preco)}</span>` +
+        `</li>`
+      ).join('');
+
+      const n = marca.produtos.length;
+      return (
+        `<div class="brand-group">` +
+        `<button type="button" class="brand-header" ` +
+        `onclick="this.nextElementSibling.classList.toggle('hidden')">` +
+        `<span>${highlight(marca.nome, q)}</span>` +
+        `<span class="brand-count">${n} produto${n !== 1 ? 's' : ''}</span>` +
+        `</button>` +
+        `<ul class="brand-products">${items}</ul>` +
+        `</div>`
+      );
+    }).join('');
+  }
+
+  async function loadDbData() {
+    const content = document.getElementById('dbContent');
+    content.className   = 'db-loading';
+    content.textContent = 'Carregando…';
+
+    try {
+      const res = await fetch('/api/admin/produtos', {
+        headers: { 'Authorization': getToken() }
+      });
+
+      if (res.status === 401) { logout(); return; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const json = await res.json();
+      dbData = json.marcas ?? [];
+      renderDb(document.getElementById('dbFilter').value.trim());
+    } catch (err) {
+      content.className   = 'db-empty';
+      content.textContent = 'Erro ao carregar dados: ' + err.message;
+    }
+  }
+
+  document.getElementById('dbFilter').addEventListener('input', e => {
+    renderDb(e.target.value.trim());
+  });
+
+  loadDbData();
 </script>
 </body>
 </html>

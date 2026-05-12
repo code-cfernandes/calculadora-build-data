@@ -14,6 +14,12 @@ server {
         client_max_body_size 25M;
     }
 
+    # Página de login
+    location = /login {
+        root  /usr/share/nginx/html;
+        try_files /login.html =404;
+    }
+
     # Serve o frontend estático
     location / {
         root  /usr/share/nginx/html;

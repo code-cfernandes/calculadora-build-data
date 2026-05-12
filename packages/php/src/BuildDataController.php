@@ -12,6 +12,10 @@ class BuildDataController
 {
     public static function handle(Request $request, Response $response): Response
     {
+        if (!Auth::check($request)) {
+            return Auth::deny($response);
+        }
+
         // Valida o upload
         if (empty($_FILES['file']) || $_FILES['file']['error'] === UPLOAD_ERR_NO_FILE) {
             return $response->status(400)->json([
@@ -51,10 +55,11 @@ class BuildDataController
         }
 
         /*
-         * Lê as linhas com valores brutos (raw):
+         * Lê as linhas calculando fórmulas:
          *   toArray($nullValue, $calculateFormulas, $formatData, $returnCellRef)
-         *   - false, false = sem cálculo de fórmula e sem formatação
-         *   - false        = índices 0-based (não usa referência de célula)
+         *   - true  = calcula fórmulas (XLOOKUP, VLOOKUP, etc.) em vez de retornar a string
+         *   - false = sem formatação de dados (números brutos)
+         *   - false = índices 0-based (não usa referência de célula)
          *
          * Layout esperado (a partir da linha 2, índice 1):
          *   [0] => MARCA
@@ -62,7 +67,7 @@ class BuildDataController
          *   [2] => PRODUTO PRICING
          *   [3] => PRECO VAREJO
          */
-        $rows = $sheet->toArray(null, false, false, false);
+        $rows = $sheet->toArray(null, true, false, false);
 
         // Libera a memória da planilha imediatamente — o arquivo em $_FILES['tmp_name']
         // é removido pelo PHP ao fim da requisição (não precisamos de unlink manual).
@@ -133,8 +138,8 @@ class BuildDataController
             $pdo = Database::connect();
             $pdo->beginTransaction();
 
-            // TRUNCATE … CASCADE limpa produtos (FK) e marcas, e reseta as sequences
-            $pdo->exec('TRUNCATE marcas CASCADE');
+            // TRUNCATE … RESTART IDENTITY CASCADE limpa tudo e reseta as sequences
+            $pdo->exec('TRUNCATE marcas RESTART IDENTITY CASCADE');
 
             $stmtMarca   = $pdo->prepare('INSERT INTO marcas (nome) VALUES (?) RETURNING id');
             $stmtProduto = $pdo->prepare('INSERT INTO produtos (marca_id, nome, preco) VALUES (?, ?, ?)');

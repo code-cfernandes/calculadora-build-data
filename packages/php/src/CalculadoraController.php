@@ -10,11 +10,49 @@ use PivotPHP\Core\Http\Response;
 class CalculadoraController
 {
     /**
-     * GET /api/produtos
-     * Retorna todas as marcas com seus produtos, lidos do banco de dados.
+     * GET /api/produtos  (pública — sem preços)
+     * Retorna todas as marcas com seus produtos, sem expor valores.
      */
     public static function listar(Request $request, Response $response): Response
     {
+        try {
+            $pdo = Database::connect();
+        } catch (\Exception $e) {
+            return $response->status(503)->json(['error' => 'Banco de dados indisponível: ' . $e->getMessage()]);
+        }
+
+        $stmt = $pdo->query(
+            'SELECT m.id AS marca_id, m.nome AS marca_nome,
+                    p.id, p.nome
+             FROM marcas m
+             JOIN produtos p ON p.marca_id = m.id
+             ORDER BY m.nome, p.nome'
+        );
+
+        $marcas = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $mid = (int) $row['marca_id'];
+            if (!isset($marcas[$mid])) {
+                $marcas[$mid] = ['id' => $mid, 'nome' => $row['marca_nome'], 'produtos' => []];
+            }
+            $marcas[$mid]['produtos'][] = [
+                'id'   => (int) $row['id'],
+                'nome' => $row['nome'],
+            ];
+        }
+
+        return $response->json(['marcas' => array_values($marcas)]);
+    }
+
+    /**
+     * GET /api/admin/produtos  (protegida por Bearer HMAC-SHA256 — retorna preços)
+     */
+    public static function listarAdmin(Request $request, Response $response): Response
+    {
+        if (!Auth::check($request)) {
+            return Auth::deny($response);
+        }
+
         try {
             $pdo = Database::connect();
         } catch (\Exception $e) {
@@ -44,6 +82,7 @@ class CalculadoraController
 
         return $response->json(['marcas' => array_values($marcas)]);
     }
+
 
     /**
      * POST /api/calcular
@@ -109,35 +148,20 @@ class CalculadoraController
             $precos[(int) $row['id']] = (float) $row['preco'];
         }
 
+        if (empty($precos)) {
+            return $response->status(422)->json([
+                'error' => 'Nenhum dos produtos informados foi encontrado no banco de dados.',
+            ]);
+        }
+
         // Calcula o total (mesma lógica do app.js — arredondado apenas no resultado final)
         $total = 0.0;
         foreach ($itensValidos as $item) {
             $produtoId = (int) $item['produto_id'];
-            $qty       = (int) $item['qty'];
-
             if (!isset($precos[$produtoId])) {
-                continue; // produto não existe no DB — ignora silenciosamente
+                continue;
             }
-
-            $total += $qty * $precos[$produtoId];
-        }
-
-        // sprintf('%.2f') formata diretamente sobre o valor binário IEEE 754,
-        // sem a correção de arredondamento que round() aplica.
-        // Isso replica o comportamento de Number.toFixed(2) do JavaScript.
-
-        // DEBUG TEMPORÁRIO — remover após diagnóstico
-        $debug = [];
-        foreach ($itensValidos as $item) {
-            $pid = (int) $item['produto_id'];
-            $q   = (int) $item['qty'];
-            $p   = $precos[$pid] ?? null;
-            $debug[] = [
-                'produto_id' => $pid,
-                'qty'        => $q,
-                'preco_db'   => $p,
-                'subtotal'   => $p !== null ? $q * $p : null,
-            ];
+            $total += (int) $item['qty'] * $precos[$produtoId];
         }
 
         return $response->json([
