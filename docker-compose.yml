@@ -20,6 +20,7 @@ services:
     build:
       context: ./packages/php
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       - DB_HOST=db
       - DB_NAME=${DB_NAME}
