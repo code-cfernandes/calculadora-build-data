@@ -16,6 +16,16 @@ $app = new Application();
 // CORS não é necessário: o nginx do frontend faz proxy para /api/,
 // então o browser sempre fala com a mesma origem.
 
+// Response::json()/text()/html() fazem auto-emit por padrão, e Application::run()
+// SEMPRE chama $response->emit() de novo no final — duas emissões por requisição
+// (a segunda é descartada por uma trava interna, mas ainda gera warning em todo
+// request). Desabilitamos o auto-emit aqui para que só o emit() final do run()
+// dispare, eliminando o warning e a chamada redundante.
+$app->use(function (Request $req, Response $res, $next) {
+    $res->disableAutoEmit();
+    return $next($req, $res);
+});
+
 $app->post('/api/login', function (Request $req, Response $res): Response {
     $body = $req->body;
     $user = trim((string) ($body->user ?? ''));
