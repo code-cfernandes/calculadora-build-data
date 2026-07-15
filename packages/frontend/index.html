@@ -125,9 +125,12 @@
       background: #15803d;
       color: #fff;
       text-decoration: none;
+      border: none;
       border-radius: 6px;
       font-size: .85rem;
+      font-family: inherit;
       font-weight: 600;
+      cursor: pointer;
     }
 
     /* Toggle de download */
@@ -357,7 +360,10 @@
       <h2>Produtos no banco</h2>
       <p class="subtitle" style="margin-bottom:0">Verificação dos dados carregados no banco.</p>
     </div>
-    <span id="dbCount" class="db-count" style="display:none"></span>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <span id="dbCount" class="db-count" style="display:none"></span>
+      <button type="button" id="downloadDbDuty" class="download-btn" style="margin-top:0">Baixar data.duty (da base)</button>
+    </div>
   </div>
 
   <div class="db-filter field">
@@ -567,6 +573,45 @@
 
   document.getElementById('dbFilter').addEventListener('input', e => {
     renderDb(e.target.value.trim());
+  });
+
+  /* ── Download do data.duty a partir da base salva ── */
+
+  const downloadDbDutyBtn = document.getElementById('downloadDbDuty');
+
+  downloadDbDutyBtn.addEventListener('click', async () => {
+    downloadDbDutyBtn.disabled = true;
+    const originalLabel = downloadDbDutyBtn.textContent;
+    downloadDbDutyBtn.textContent = 'Gerando…';
+
+    try {
+      const res = await fetch('/api/admin/duty', {
+        headers: { 'Authorization': getToken() }
+      });
+
+      if (res.status === 401) { logout(); return; }
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setStatus('error', json.error ?? 'Erro ao gerar data.duty a partir da base.');
+        return;
+      }
+
+      const blob    = new Blob([json.duty], { type: 'text/plain' });
+      const blobUrl = URL.createObjectURL(blob);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+
+      const a    = document.createElement('a');
+      a.href     = blobUrl;
+      a.download = 'data.duty';
+      a.click();
+    } catch (err) {
+      setStatus('error', 'Falha na comunicação com a API: ' + err.message);
+    } finally {
+      downloadDbDutyBtn.disabled = false;
+      downloadDbDutyBtn.textContent = originalLabel;
+    }
   });
 
   loadDbData();

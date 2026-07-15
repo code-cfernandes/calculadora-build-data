@@ -54,6 +54,18 @@ class BuildDataController
             $sheet = $spreadsheet->getActiveSheet();
         }
 
+        // Checagem de tamanho antes do parse pesado (toArray com cálculo de fórmulas
+        // é o principal consumidor de memória do PhpSpreadsheet). Evita estourar o
+        // memory_limit no meio da requisição e derrubar a conexão sem resposta.
+        $maxRows = (int) (getenv('MAX_BUILD_ROWS') ?: 50000);
+        $highestRow = $sheet->getHighestDataRow();
+        if ($highestRow > $maxRows) {
+            return $response->status(422)->json([
+                'error' => "Planilha com $highestRow linhas excede o limite de $maxRows. "
+                    . 'Divida o arquivo em partes menores.',
+            ]);
+        }
+
         /*
          * Lê as linhas calculando fórmulas:
          *   toArray($nullValue, $calculateFormulas, $formatData, $returnCellRef)

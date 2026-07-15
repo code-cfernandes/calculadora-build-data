@@ -70,6 +70,7 @@ packages/php/src/
 | POST | `/api/build` | Yes | Upload Excel, persist data, return `data.duty` |
 | GET | `/api/produtos` | No | List brands/products (no prices) |
 | GET | `/api/admin/produtos` | Yes | List brands/products with prices |
+| GET | `/api/admin/duty` | Yes | Rebuild `data.duty` from the currently saved database data (no upload) |
 | POST | `/api/calcular` | No | Calculate order total |
 
 **`/api/calcular` business rules:** minimum 3 different products and 100 total units.
@@ -104,12 +105,18 @@ Copy `.env.example` to `.env` before first run. Key variables:
 | `DB_NAME` / `DB_USER` / `DB_PASSWORD` | PostgreSQL credentials |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Admin login credentials |
 | `ADMIN_SECRET` | HMAC secret — generate with `openssl rand -hex 32` |
+| `MAX_BUILD_ROWS` | Row limit for `/api/build` uploads (default `50000`) — protects against PHP memory exhaustion on large spreadsheets |
 
 ## Excel File Format (for `/api/build`)
 
 - Accepted formats: `.xlsx`, `.xls`, `.ods`, `.csv`
 - Max upload size: 20MB
+- Max rows: `MAX_BUILD_ROWS` (default 50000) — larger sheets are rejected with a 422 before parsing
 - Row 1: headers; data from row 2+
 - Required columns: `MARCA`, `PRODUTO PRICING`, `PRECO VAREJO`
 - `CATEGORIA` column is present but ignored
 - Rows with missing required fields are silently skipped
+
+## PHP Error Handling
+
+`display_errors` is off and `log_errors` is on (`packages/php/docker/php.ini`), logging to `storage/logs/php-error.log` inside the container. This is intentional: with Apache's mod_php, `display_errors=STDOUT` would inject raw PHP warnings/notices/fatal errors directly into the HTTP response body, corrupting the JSON returned by every endpoint. Never re-enable `display_errors` in this setup — use the log file for debugging instead.

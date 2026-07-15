@@ -85,6 +85,64 @@ class CalculadoraController
 
 
     /**
+     * GET /api/admin/duty  (protegida — gera data.duty a partir da base salva)
+     *
+     * Mesmo formato produzido pelo BuildDataController::handle, mas lendo
+     * o estado atual do banco em vez de processar uma planilha nova.
+     */
+    public static function exportDuty(Request $request, Response $response): Response
+    {
+        if (!Auth::check($request)) {
+            return Auth::deny($response);
+        }
+
+        try {
+            $pdo = Database::connect();
+        } catch (\Exception $e) {
+            return $response->status(503)->json(['error' => 'Banco de dados indisponível: ' . $e->getMessage()]);
+        }
+
+        $stmt = $pdo->query(
+            'SELECT m.id AS marca_id, m.nome AS marca_nome,
+                    p.nome, p.preco
+             FROM marcas m
+             JOIN produtos p ON p.marca_id = m.id
+             ORDER BY m.nome, p.nome'
+        );
+
+        $marcasMap = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $mid = (int) $row['marca_id'];
+            if (!isset($marcasMap[$mid])) {
+                $marcasMap[$mid] = ['nome' => $row['marca_nome'], 'produtos' => []];
+            }
+            $marcasMap[$mid]['produtos'][] = [
+                'nome'  => $row['nome'],
+                'preco' => (float) $row['preco'],
+            ];
+        }
+
+        $data = ['marcas' => array_values($marcasMap)];
+
+        // json_encode sem JSON_UNESCAPED_UNICODE (mesmo motivo do BuildDataController:
+        // string pure-ASCII segura para base64 e para atob() no browser).
+        $json = json_encode($data, JSON_THROW_ON_ERROR);
+        $duty = base64_encode($json);
+
+        $totalProdutos = (int) array_sum(
+            array_map(static fn(array $m) => count($m['produtos']), $data['marcas'])
+        );
+
+        return $response->json([
+            'duty'  => $duty,
+            'stats' => [
+                'marcas'   => count($data['marcas']),
+                'produtos' => $totalProdutos,
+            ],
+        ]);
+    }
+
+    /**
      * POST /api/calcular
      *
      * Body JSON: { "itens": [{"produto_id": 1, "qty": 10}, ...] }

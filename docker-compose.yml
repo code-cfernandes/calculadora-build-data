@@ -1,5 +1,6 @@
 services:
   db:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_DB:       ${DB_NAME}
@@ -29,6 +30,7 @@ services:
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_SECRET=${ADMIN_SECRET}
+      - MAX_BUILD_ROWS=${MAX_BUILD_ROWS:-50000}
     ports:
       - "${API_PORT:-8080}:80"
     depends_on:
@@ -38,6 +40,7 @@ services:
       - app
 
   frontend:
+    restart: unless-stopped
     build:
       context: ./packages/frontend
       dockerfile: Dockerfile

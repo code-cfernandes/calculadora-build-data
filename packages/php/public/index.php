@@ -36,6 +36,7 @@ $app->post('/api/login', function (Request $req, Response $res): Response {
 $app->post('/api/build',          [BuildDataController::class,   'handle']);
 $app->get('/api/produtos',        [CalculadoraController::class, 'listar']);
 $app->get('/api/admin/produtos',  [CalculadoraController::class, 'listarAdmin']);
+$app->get('/api/admin/duty',      [CalculadoraController::class, 'exportDuty']);
 $app->post('/api/calcular',       [CalculadoraController::class, 'calcular']);
 
 $app->run();
